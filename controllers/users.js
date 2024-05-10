@@ -30,7 +30,7 @@ module.exports.signup = async (req, res) => {
         secure: true,
         maxAge: 24 * 60 * 60 * 1000,
       })
-      .json({ token: token, email: email });
+      .json({ token: token, id: user._id });
   } catch (err) {
     console.log(err);
     res.json({ msg: err });
@@ -66,7 +66,7 @@ module.exports.signin = async (req, res) => {
       console.log("token: ", jwt.decode(token));
       res
         .cookie("token", token, { httpOnly: true, maxAge: 8640000 })
-        .json({ token: token, email: email });
+        .json({ token: token, id: user._id });
     } else {
       return res.json({ status: "error", user: "invalid password" });
     }
