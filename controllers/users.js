@@ -2,6 +2,7 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 // const jwt_decode = require("jwt-decode");
 const User = require("../models/userModel");
+const { transporter, mailOptions } = require("../config/nodemailer");
 require("dotenv").config();
 
 module.exports.signup = async (req, res) => {
@@ -29,7 +30,7 @@ module.exports.signup = async (req, res) => {
         secure: true,
         maxAge: 24 * 60 * 60 * 1000,
       })
-      .json(token);
+      .json({ token: token, email: email });
   } catch (err) {
     console.log(err);
     res.json({ msg: err });
@@ -65,11 +66,28 @@ module.exports.signin = async (req, res) => {
       console.log("token: ", jwt.decode(token));
       res
         .cookie("token", token, { httpOnly: true, maxAge: 8640000 })
-        .json({ status: "ok" });
+        .json({ token: token, email: email });
     } else {
       return res.json({ status: "error", user: "invalid password" });
     }
   } else {
     return res.json({ status: "error", user: "false" });
+  }
+};
+
+module.exports.contact = async (req, res) => {
+  const data = req.body;
+  console.log("hello");
+  try {
+    await transporter.sendMail({
+      ...mailOptions,
+      subject: data.subject,
+      text: `From ${data.first} ${data.last}(${data.email}),
+      ${data.message}`,
+    });
+    return res.status(200).json({ complete: "yes" });
+  } catch (error) {
+    console.log(error);
+    return res.status(400).json({ complete: "no" });
   }
 };
