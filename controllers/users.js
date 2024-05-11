@@ -52,7 +52,7 @@ module.exports.signin = async (req, res) => {
   const user = await User.find({
     email,
   });
-  console.log(user);
+  // console.log(user);
   if (user.length > 0) {
     const isPasswordValid = await bcrypt.compare(password, user[0].password);
     if (isPasswordValid) {
@@ -63,10 +63,10 @@ module.exports.signin = async (req, res) => {
         },
         "sickbay.ai-hackfest"
       );
-      console.log("token: ", jwt.decode(token));
-      res
-        .cookie("token", token, { httpOnly: true, maxAge: 8640000 })
-        .json({ token: token, id: user._id });
+      console.log("token: " + user[0]._id);
+
+      // .cookie("token", token, { httpOnly: true, maxAge: 8640000 })
+      res.json({ token: token, id: user[0]._id });
     } else {
       return res.json({ status: "error", user: "invalid password" });
     }
