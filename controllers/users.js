@@ -39,9 +39,11 @@ module.exports.signup = async (req, res) => {
 
 module.exports.userDetails = async (req, res) => {
   try {
-    const token = req.cookies.token;
-    const decodedToken = jwt.verify(token, process.env.TOKEN_SECRET);
-    return decodedToken.id;
+    console.log(req.body);
+    const { id } = req.body;
+    const user = User.find({ _id: id });
+    // const decodedToken = jwt.verify(token, process.env.TOKEN_SECRET);
+    return res.json({ user: user });
   } catch (error) {
     console.log(error);
   }
