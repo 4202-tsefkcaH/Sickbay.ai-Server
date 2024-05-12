@@ -7,6 +7,9 @@ from bson import json_util
 
 import os, json
 
+from llmwrag import llm
+from ocr import pdf2text
+
 app = Flask(__name__)
 cors = CORS(app, resources={r"/*": {"origins": "*"}})
 
@@ -30,39 +33,31 @@ def chat():
     data = request.get_json()
     st = "Question:- " + data['prompt'] + "\n Answer:- "
     answer = query({"inputs": st})[0]['generated_text']
-    newChat = {
-        "question" : data['prompt'],
-        "answer" : answer,
-        "pTime" : data['tm']
-    }
-    session = sessionDoc.find_one_and_update({ "_id" :ObjectId(data['sessionID'])}, {'$push': {'chats': newChat}})
-    print("_______________")
-    print(session)
-    print("_______________")
     return answer
 
-@app.route('/api/new-session', methods=['POST'])
-def newSession():
-    data = request.get_json()
-    newDoc = {
-        "user_id": data["user_id"],
-        "cTime": data["timenow"],
-        "chatHeading": "New Chat",
-        "chatContent" : "Something brewing bois!!",
-        "chats": [],
-    }
-    newS = sessionDoc.insert_one(newDoc)
-    ans = str(ObjectId(newS.inserted_id))
-    return ans
+@app.route('/api/ocr', methods=['POST'])
+def ocr():
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file part'})
 
-@app.route('/api/chatHistory/<user_id>', methods=['GET'])
-def getData(user_id):
-    print(user_id)
-    retrieve = []
-    for sessions in sessionDoc.find({"user_id": user_id}):
-        retrieve.append(parse_json(sessions))
-    topass = jsonify(retrieve)
-    return topass
+    pdf_file = request.files['file']
+    print("request: ", pdf_file)
+    if pdf_file.filename == '':
+        return jsonify({'error': 'No selected file'})
+
+    try:
+        pdf_bytes = pdf_file.read()
+        text = pdf2text(pdf_bytes)
+        return jsonify({"text": text})
+    except Exception as e:
+        return jsonify({'error': str(e)})
+
+@app.route('/api/llm', methods=['POST'])
+def llmAPI():
+    data = request.get_json()
+    inst = llm(docs=data['text'])
+    ans, rd = inst.respond(data['prompt'])
+    return ans
 
 if __name__ == "__main__":
     app.run(debug=True, port=8080)
