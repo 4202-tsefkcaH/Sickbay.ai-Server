@@ -106,7 +106,7 @@ class llm:
         ]
 
         self.docs_processed = split_documents(
-            40, 
+            100, 
             self.RAW_KNOWLEDGE_BASE,
             tokenizer_name=EMBEDDING_MODEL_NAME,
         ) 
@@ -121,7 +121,7 @@ class llm:
     def doc_data(self):
         return self.KNOWLEDGE_VECTOR_DATABASE
     
-    def query(self,payload,min_length=500):
+    def query(self,payload):
         response = requests.post(API_URL, headers=headers, json=payload)
         return response.json()     
 
@@ -131,7 +131,7 @@ class llm:
             knowledge_index: FAISS,
             reranker: Optional[RAGPretrainedModel] = None,
             num_retrieved_docs: int = 30,
-            num_docs_final: int = 5,
+            num_docs_final: int = 3,
         ) -> Tuple[str, List[LangchainDocument]]:
             # Gather documents with retriever
             print("=> Retrieving documents...")
@@ -155,7 +155,7 @@ class llm:
             # Redact an answer
             print("=> Generating answer...")
             qn=context
-            s1= f"I will be giving some information regarding the patient's report based on the information given above and the knowledge you have, please answer the following query, even though it is not neccesary to use the information given above Context:- {qn} Query:-{question}"
+            s1= f"I will be giving some information regarding the patient's report based on the information given above and the knowledge you have, please answer the following query, even though it is not neccesary to use the information given above Context:- {qn} Query:-{question} Answer:- "
             output = self.query({
                 "inputs": f"I will be giving some information regarding the patient's report based on the information given above and the knowledge you have, please answer the following query, even though it is not neccesary to use the information given above Context:- {qn} Query:-{question} Answer:- ",
             })
